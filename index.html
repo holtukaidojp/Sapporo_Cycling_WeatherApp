@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Cycle Sapporo</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  background:#edf2f7;
+  color:#222;
+}
+
+header{
+  background:linear-gradient(135deg,#1e90ff,#00b894);
+  color:white;
+  padding:20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.header-left h1{
+  font-size:32px;
+}
+
+.header-left p{
+  margin-top:5px;
+  opacity:0.9;
+}
+
+.update-box{
+  text-align:right;
+}
+
+.container{
+  width:95%;
+  max-width:1200px;
+  margin:20px auto;
+}
+
+.card{
+  background:white;
+  border-radius:24px;
+  padding:22px;
+  margin-bottom:22px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.08);
+}
+
+.card-title{
+  color:#1e90ff;
+  font-size:32px;
+  margin-bottom:20px;
+  font-weight:bold;
+}
+
+.weather-main{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  flex-wrap:wrap;
+}
+
+.temp-area{
+  flex:1;
+}
+
+.temp{
+  font-size:90px;
+  font-weight:bold;
+}
+
+.weather-text{
+  font-size:42px;
+  margin-top:5px;
+}
+
+.status{
+  margin-top:20px;
+  display:inline-block;
+  background:#dff6ff;
+  color:#0984e3;
+  padding:12px 20px;
+  border-radius:999px;
+  font-weight:bold;
+  font-size:20px;
+}
+
+.weather-icon{
+  font-size:120px;
+}
+
+.advice{
+  margin-top:20px;
+  padding:16px;
+  border-radius:16px;
+  background:#effaf4;
+  border:1px solid #cdebd7;
+  color:#226644;
+  font-weight:bold;
+}
+
+.detail-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:18px;
+}
+
+.detail-box{
+  background:#f7fbff;
+  border:1px solid #d7eaff;
+  border-radius:20px;
+  padding:20px;
+}
+
+.detail-label{
+  color:#555;
+  font-size:18px;
+  margin-bottom:12px;
+  font-weight:bold;
+}
+
+.detail-value{
+  font-size:42px;
+  font-weight:bold;
+}
+
+.detail-sub{
+  margin-top:8px;
+  color:#666;
+  font-size:16px;
+}
+
+.chart-info{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.max-temp{
+  color:#ff3b30;
+  font-size:36px;
+  font-weight:bold;
+}
+
+.min-temp{
+  color:#007aff;
+  font-size:36px;
+  font-weight:bold;
+}
+
+.chart-box{
+  width:100%;
+  overflow-x:auto;
+}
+
+canvas{
+  width:100%;
+  background:white;
+  border-radius:18px;
+}
+
+.spots{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:18px;
+}
+
+.spot-link{
+  text-decoration:none;
+  color:inherit;
+  transition:0.25s;
+}
+
+.spot-link:hover{
+  transform:translateY(-6px);
+}
+
+.spot-card{
+  overflow:hidden;
+  border-radius:18px;
+  background:#f8fbff;
+  border:1px solid #e4edf7;
+  transition:0.25s;
+  cursor:pointer;
+}
+
+.spot-card:hover{
+  box-shadow:0 10px 24px rgba(0,0,0,0.15);
+}
+
+.spot-image{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+}
+
+.spot-content{
+  padding:15px;
+}
+
+.spot-content h3{
+  margin-bottom:8px;
+  font-size:24px;
+}
+
+.spot-content p{
+  color:#666;
+  line-height:1.6;
+}
+
+footer{
+  text-align:center;
+  padding:30px;
+  color:#666;
+}
+
+@media(max-width:768px){
+
+  .temp{
+    font-size:64px;
+  }
+
+  .weather-text{
+    font-size:30px;
+  }
+
+  .weather-icon{
+    font-size:80px;
+  }
+
+  .card-title{
+    font-size:26px;
+  }
+
+  .detail-value{
+    font-size:32px;
+  }
+
+  .max-temp,
+  .min-temp{
+    font-size:28px;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+  <div class="header-left">
+    <h1>🚴 Cycle Sapporo</h1>
+    <p>札幌サイクリング情報アプリ</p>
+  </div>
+
+  <div class="update-box">
+    <div>🔄 更新</div>
+    <div id="updateTime">--:--</div>
+  </div>
+
+</header>
+
+<div class="container">
+
+  <!-- 現在天気 -->
+  <div class="card">
+
+    <div class="card-title">
+      🌧 現在の札幌天気
+    </div>
+
+    <div class="weather-main">
+
+      <div class="temp-area">
+
+        <div class="temp" id="temp">
+          --℃
+        </div>
+
+        <div class="weather-text" id="weather">
+          取得中
+        </div>
+
+        <div class="status" id="cyclingStatus">
+          判定中
+        </div>
+
+      </div>
+
+      <div class="weather-icon" id="weatherIcon">
+        ☀️
+      </div>
+
+    </div>
+
+    <div class="advice" id="advice">
+      読み込み中...
+    </div>
+
+  </div>
+
+  <!-- 詳細 -->
+  <div class="card">
+
+    <div class="card-title">
+      📊 詳細データ
+    </div>
+
+    <div class="detail-grid">
+
+      <div class="detail-box">
+
+        <div class="detail-label">
+          💨 標高10mの風速 / 風向き
+        </div>
+
+        <div class="detail-value" id="wind">
+          --
+        </div>
+
+        <div class="detail-sub" id="windDirectionText">
+          --
+        </div>
+
+      </div>
+
+      <div class="detail-box">
+
+        <div class="detail-label">
+          🌧 降水確率
+        </div>
+
+        <div class="detail-value" id="rain">
+          --%
+        </div>
+
+        <div class="detail-sub">
+          現在の降水確率
+        </div>
+
+      </div>
+
+      <div class="detail-box">
+
+        <div class="detail-label">
+          🌅 日の出
+        </div>
+
+        <div class="detail-value" id="sunrise">
+          --:--
+        </div>
+
+      </div>
+
+      <div class="detail-box">
+
+        <div class="detail-label">
+          🌇 日の入り
+        </div>
+
+        <div class="detail-value" id="sunset">
+          --:--
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- グラフ -->
+  <div class="card">
+
+    <div class="card-title">
+      📈 今日の気温推移
+    </div>
+
+    <div class="chart-info">
+
+      <div>
+        <div>
+          最高
+          <span class="max-temp" id="maxTemp">
+            --
+          </span>
+        </div>
+
+        <div>
+          最低
+          <span class="min-temp" id="minTemp">
+            --
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="chart-box">
+
+      <canvas
+        id="tempChart"
+        width="1200"
+        height="700"
+      ></canvas>
+
+    </div>
+
+  </div>
+
+  <!-- スポット -->
+  <div class="card">
+
+    <div class="card-title">
+      🚴 おすすめサイクリングスポット
+    </div>
+
+    <div class="spots">
+
+      <!-- モエレ沼 -->
+      <a
+        class="spot-link"
+        href="https://moerenumapark.jp/"
+        target="_blank"
+      >
+
+        <div class="spot-card">
+
+          <img
+            class="spot-image"
+            src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1200&auto=format&fit=crop"
+          >
+
+          <div class="spot-content">
+
+            <h3>モエレ沼公園</h3>
+
+            <p>
+              広い道と景色が魅力。
+              初心者でも走りやすい人気スポット。
+            </p>
+
+          </div>
+
+        </div>
+
+      </a>
+
+      <!-- 白石こころーど -->
+      <a
+        class="spot-link"
+        href="https://www.city.sapporo.jp/shiroishi/shisetsu/doboku/cycling/"
+        target="_blank"
+      >
+
+        <div class="spot-card">
+
+          <img
+            class="spot-image"
+            src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop"
+          >
+
+          <div class="spot-content">
+
+            <h3>白石こころーど</h3>
+
+            <p>
+              信号が少なく快適。
+              長距離練習にもおすすめ。
+            </p>
+
+          </div>
+
+        </div>
+
+      </a>
+
+      <!-- 滝野 -->
+      <a
+        class="spot-link"
+        href="https://www.takinopark.com/"
+        target="_blank"
+      >
+
+        <div class="spot-card">
+
+          <img
+            class="spot-image"
+            src="https://images.unsplash.com/photo-1472396961693-142e6e269027?q=80&w=1200&auto=format&fit=crop"
+          >
+
+          <div class="spot-content">
+
+            <h3>滝野すずらん丘陵公園</h3>
+
+            <p>
+              自然が多く、
+              ヒルクライム気分も楽しめるコース。
+            </p>
+
+          </div>
+
+        </div>
+
+      </a>
+
+    </div>
+
+  </div>
+
+</div>
+
+<footer>
+  © 2026 Cycle Sapporo
+</footer>
+
+<script>
+
+const LAT = 43.06;
+const LNG = 141.35;
+
+const API_URL =
+`https://api.open-meteo.com/v1/forecast
+?latitude=${LAT}
+&longitude=${LNG}
+&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m
+&hourly=temperature_2m,precipitation_probability
+&daily=sunrise,sunset
+&past_days=1
+&forecast_days=1
+&wind_speed_unit=kmh
+&timezone=Asia/Tokyo`
+.replace(/\s/g,"");
+
+async function loadWeather(){
+
+  try{
+
+    const response =
+      await fetch(API_URL);
+
+    const data =
+      await response.json();
+
+    const current =
+      data.current;
+
+    const currentTemp =
+      Math.round(current.temperature_2m * 10) / 10;
+
+    const weatherCode =
+      current.weather_code;
+
+    // 風速
+    const windSpeed =
+      current.wind_speed_10m.toFixed(1);
+
+    // 風向き
+    const windDirection =
+      current.wind_direction_10m;
+
+    // 降水確率
+    const currentHour =
+      current.time.slice(0,13);
+
+    const hourlyTimes =
+      data.hourly.time.map(
+        t => t.slice(0,13)
+      );
+
+    const rainIndex =
+      hourlyTimes.indexOf(currentHour);
+
+    let rainProbability = 0;
+
+    if(rainIndex !== -1){
+
+      rainProbability =
+        data.hourly
+        .precipitation_probability[
+          rainIndex
+        ];
+
+    }
+
+    // 日の出
+    const sunrise =
+      data.daily.sunrise[0]
+      .split("T")[1]
+      .slice(0,5);
+
+    // 日の入り
+    const sunset =
+      data.daily.sunset[0]
+      .split("T")[1]
+      .slice(0,5);
+
+    // 天気判定
+    let weatherText = "不明";
+    let weatherIcon = "❓";
+
+    if(weatherCode === 0){
+
+      weatherText = "快晴";
+      weatherIcon = "☀️";
+
+    }
+    else if(weatherCode <= 3){
+
+      weatherText = "晴れ";
+      weatherIcon = "🌤";
+
+    }
+    else if(weatherCode <= 48){
+
+      weatherText = "曇り";
+      weatherIcon = "☁️";
+
+    }
+    else if(weatherCode <= 67){
+
+      weatherText = "雨";
+      weatherIcon = "🌧";
+
+    }
+    else if(weatherCode <= 77){
+
+      weatherText = "雪";
+      weatherIcon = "❄️";
+
+    }
+    else{
+
+      weatherText = "荒天";
+      weatherIcon = "⛈";
+
+    }
+
+    // 風向き修正
+    const correctedDirection =
+      (windDirection + 180) % 360;
+
+    function getDirection(deg){
+
+      if(deg >= 337.5 || deg < 22.5){
+        return {
+          arrow:"⬆️",
+          text:"北風"
+        };
+      }
+
+      if(deg < 67.5){
+        return {
+          arrow:"↗️",
+          text:"北東の風"
+        };
+      }
+
+      if(deg < 112.5){
+        return {
+          arrow:"➡️",
+          text:"東風"
+        };
+      }
+
+      if(deg < 157.5){
+        return {
+          arrow:"↘️",
+          text:"南東の風"
+        };
+      }
+
+      if(deg < 202.5){
+        return {
+          arrow:"⬇️",
+          text:"南風"
+        };
+      }
+
+      if(deg < 247.5){
+        return {
+          arrow:"↙️",
+          text:"南西の風"
+        };
+      }
+
+      if(deg < 292.5){
+        return {
+          arrow:"⬅️",
+          text:"西風"
+        };
+      }
+
+      return {
+        arrow:"↖️",
+        text:"北西の風"
+      };
+
+    }
+
+    const windData =
+      getDirection(correctedDirection);
+
+    // サイクリング判定
+    let cyclingText =
+      "⚠️ 注意";
+
+    let advice =
+      "安全運転しましょう";
+
+    if(
+      (weatherText === "快晴" ||
+      weatherText === "晴れ") &&
+      windSpeed <= 20 &&
+      currentTemp >= 15
+    ){
+
+      cyclingText =
+        "🚴 サイクリング日和";
+
+      advice =
+        "今日はかなり走りやすい天気です！";
+
+    }
+    else if(weatherText === "雨"){
+
+      cyclingText =
+        "☔ 路面注意";
+
+      advice =
+        "今日は路面が滑りやすいので安全運転を！";
+
+    }
+    else if(windSpeed >= 30){
+
+      cyclingText =
+        "💨 強風注意";
+
+      advice =
+        "横風に注意してください";
+
+    }
+
+    // 表示
+    document
+      .getElementById("temp")
+      .textContent =
+      `${currentTemp}℃`;
+
+    document
+      .getElementById("weather")
+      .textContent =
+      weatherText;
+
+    document
+      .getElementById("weatherIcon")
+      .textContent =
+      weatherIcon;
+
+    document
+      .getElementById("cyclingStatus")
+      .textContent =
+      cyclingText;
+
+    document
+      .getElementById("advice")
+      .textContent =
+      advice;
+
+    document
+      .getElementById("wind")
+      .innerHTML =
+      `${windSpeed}<span style="font-size:22px;"> km/h</span> ${windData.arrow}`;
+
+    document
+      .getElementById("windDirectionText")
+      .textContent =
+      windData.text;
+
+    document
+      .getElementById("rain")
+      .textContent =
+      `${rainProbability}%`;
+
+    document
+      .getElementById("sunrise")
+      .textContent =
+      sunrise;
+
+    document
+      .getElementById("sunset")
+      .textContent =
+      sunset;
+
+    // 更新時間
+    const now = new Date();
+
+    document
+      .getElementById("updateTime")
+      .textContent =
+      now.toLocaleTimeString(
+        "ja-JP",
+        {
+          hour:"2-digit",
+          minute:"2-digit"
+        }
+      );
+
+    createChart(data);
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    alert("天気取得エラー");
+
+  }
+
+}
+
+// グラフ
+function createChart(data){
+
+  const allTemps =
+    data.hourly.temperature_2m;
+
+  const allTimes =
+    data.hourly.time;
+
+  // 今日の日付
+  const today =
+    new Date()
+    .toISOString()
+    .split("T")[0];
+
+  const temps = [];
+  const times = [];
+
+  // 今日のみ抽出
+  allTimes.forEach((time,index)=>{
+
+    if(time.startsWith(today)){
+
+      temps.push(allTemps[index]);
+      times.push(time);
+
+    }
+
+  });
+
+  const max =
+    Math.max(...temps);
+
+  const min =
+    Math.min(...temps);
+
+  document
+    .getElementById("maxTemp")
+    .textContent =
+    `${max}℃`;
+
+  document
+    .getElementById("minTemp")
+    .textContent =
+    `${min}℃`;
+
+  const canvas =
+    document.getElementById(
+      "tempChart"
+    );
+
+  const ctx =
+    canvas.getContext("2d");
+
+  // スマホ判定
+  const isMobile =
+    window.innerWidth <= 768;
+
+  // スマホ最適化
+  if(isMobile){
+
+    canvas.width = 1200;
+    canvas.height = 700;
+
+  }
+  else{
+
+    canvas.width = 1200;
+    canvas.height = 500;
+
+  }
+
+  const w =
+    canvas.width;
+
+  const h =
+    canvas.height;
+
+  ctx.clearRect(0,0,w,h);
+
+  const padding =
+    isMobile ? 90 : 70;
+
+  // フォントサイズ
+  const tempFont =
+    isMobile ? 26 : 16;
+
+  const timeFont =
+    isMobile ? 22 : 16;
+
+  // 点サイズ
+  const pointSize =
+    isMobile ? 10 : 6;
+
+  // 背景線
+  ctx.strokeStyle = "#dbe7f3";
+  ctx.lineWidth = 1;
+
+  for(let i=0;i<5;i++){
+
+    const y =
+      padding +
+      ((h - padding * 2) / 4) * i;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      padding,
+      y
+    );
+
+    ctx.lineTo(
+      w - padding,
+      y
+    );
+
+    ctx.stroke();
+
+  }
+
+  // 線
+  ctx.beginPath();
+
+  temps.forEach((temp,index)=>{
+
+    const x =
+      padding +
+      (index / (temps.length - 1 || 1))
+      * (w - padding * 2);
+
+    const y =
+      h - padding -
+      ((temp - min) /
+      (max - min || 1))
+      * (h - padding * 2);
+
+    if(index === 0){
+
+      ctx.moveTo(x,y);
+
+    }
+    else{
+
+      ctx.lineTo(x,y);
+
+    }
+
+  });
+
+  ctx.strokeStyle = "#2f80ed";
+  ctx.lineWidth =
+    isMobile ? 8 : 5;
+
+  ctx.stroke();
+
+  // 点
+  temps.forEach((temp,index)=>{
+
+    const x =
+      padding +
+      (index / (temps.length - 1 || 1))
+      * (w - padding * 2);
+
+    const y =
+      h - padding -
+      ((temp - min) /
+      (max - min || 1))
+      * (h - padding * 2);
+
+    ctx.beginPath();
+
+    ctx.arc(
+      x,
+      y,
+      pointSize,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fillStyle =
+      "#10b981";
+
+    ctx.fill();
+
+    // 温度
+    ctx.fillStyle =
+      "#333";
+
+    ctx.font =
+      `${tempFont}px Arial`;
+
+    ctx.fillText(
+      `${temp}°`,
+      x - (isMobile ? 24 : 14),
+      y - (isMobile ? 24 : 14)
+    );
+
+    // 時間
+    const hour =
+      times[index]
+      .split("T")[1]
+      .slice(0,2);
+
+    ctx.fillStyle =
+      "#666";
+
+    ctx.font =
+      `${timeFont}px Arial`;
+
+    ctx.fillText(
+      hour,
+      x - (isMobile ? 14 : 8),
+      h - (isMobile ? 40 : 25)
+    );
+
+  });
+
+}
+
+// 初回実行
+loadWeather();
+
+// 5分更新
+setInterval(loadWeather, 300000);
+
+</script>
+
+</body>
+</html>
